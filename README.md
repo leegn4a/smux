@@ -107,3 +107,8 @@ Works with Claude Code, Codex, Cursor, Copilot, and [40+ other agents](https://s
 
 - macOS (requires [Homebrew](https://brew.sh)) or Linux
 - tmux 3.2+ (installed automatically)
+
+## Sponsor
+
+smux is free and maintained in my own time.
+[Sponsoring](https://github.com/sponsors/ShawnPana) keeps it that way.
