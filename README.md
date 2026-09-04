@@ -84,9 +84,13 @@ See the [smux skill](skills/smux/SKILL.md) for full documentation on agent-to-ag
 
 ## Update
 
+From a tmux pane:
+
 ```bash
 smux update
 ```
+
+Outside tmux, run `~/.smux/bin/smux update` directly.
 
 ## Uninstall
 

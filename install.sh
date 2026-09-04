@@ -117,28 +117,40 @@ backup_existing() {
 }
 
 ensure_path() {
-  if echo "$PATH" | tr ':' '\n' | grep -qx "$BIN_DIR"; then
-    return
-  fi
-
   local rc_file=""
   case "${SHELL:-/bin/bash}" in
-    */zsh)  rc_file="$HOME/.zshrc" ;;
+    */zsh)
+      if [[ -n "${ZDOTDIR:-}" ]]; then
+        rc_file="$ZDOTDIR/.zshrc"
+      elif [[ -f "$HOME/.config/zsh/.zshrc" ]]; then
+        # Common Arch/Linux convention when ZDOTDIR was not exported to bash.
+        rc_file="$HOME/.config/zsh/.zshrc"
+      else
+        rc_file="$HOME/.zshrc"
+      fi
+      ;;
     */bash) rc_file="$HOME/.bashrc" ;;
     *)      rc_file="$HOME/.profile" ;;
   esac
 
-  local path_line='export PATH="$HOME/.smux/bin:$PATH"'
+  local path_marker='# smux: tmux-only PATH'
 
-  if [[ -f "$rc_file" ]] && grep -qF '.smux/bin' "$rc_file"; then
+  if [[ -f "$rc_file" ]] && grep -qF "$path_marker" "$rc_file"; then
     return
   fi
 
-  info "Adding ~/.smux/bin to PATH in $rc_file"
-  echo "" >> "$rc_file"
-  echo "# smux" >> "$rc_file"
-  echo "$path_line" >> "$rc_file"
-  export PATH="$BIN_DIR:$PATH"
+  info "Adding ~/.smux/bin to PATH inside tmux panes in $rc_file"
+  mkdir -p "$(dirname "$rc_file")"
+  {
+    printf '\n%s\n' "$path_marker"
+    printf '%s\n' 'if [ -n "${TMUX:-}" ]; then'
+    printf '%s\n' '  case ":$PATH:" in'
+    printf '%s\n' '    *":$HOME/.smux/bin:"*) ;;'
+    printf '%s\n' '    *) export PATH="$HOME/.smux/bin:$PATH" ;;'
+    printf '%s\n' '  esac'
+    printf '%s\n' 'fi'
+  } >> "$rc_file"
+  info "Restart your shell or run: source $rc_file"
 }
 
 download() {
@@ -232,10 +244,6 @@ cmd_install() {
   echo "  smux CLI:     ~/.smux/bin/smux"
   echo ""
   echo "  Run 'smux help' for commands."
-  if ! echo "$PATH" | tr ':' '\n' | grep -qx "$BIN_DIR"; then
-    echo ""
-    warn "Restart your shell or run: export PATH=\"\$HOME/.smux/bin:\$PATH\""
-  fi
 }
 
 cmd_update() {
