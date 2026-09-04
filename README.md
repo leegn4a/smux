@@ -104,7 +104,7 @@ smux uninstall
 Install the smux skill to teach your agents how to use tmux-bridge:
 
 ```bash
-npx skills add ShawnPana/smux
+npx skills add leegn4a/smux --skill smux
 ```
 
 Works with Claude Code, Codex, Cursor, Copilot, and [40+ other agents](https://skills.sh).
