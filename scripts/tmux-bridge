@@ -3,7 +3,7 @@
 # Any tool that can run bash can use this to talk to other panes.
 set -euo pipefail
 
-VERSION="2.0.0"
+VERSION="2.1.0"
 
 # --- Helpers ---
 
@@ -117,6 +117,7 @@ Usage: tmux-bridge <command> [args...]
 Commands:
   list                      Show all panes (target, pid, command, size, label)
   type <target> <text>      Type text without pressing Enter
+  exec <target> <command>   Type a command and press Enter
   message <target> <text>   Type text with auto-prepended sender info and reply target
   read <target> [lines]     Read last N lines from pane (default: 50)
   keys <target> <key>...    Send special keys (Enter, Escape, C-c, etc.)
@@ -224,6 +225,19 @@ cmd_type() {
   require_read "$target"
 
   tmx send-keys -t "$target" -l -- "$2"
+  clear_read "$target"
+}
+
+cmd_exec() {
+  require_args 2 $# "exec"
+  require_tmux
+  local target
+  target=$(resolve_target "$1")
+  validate_target "$target"
+  require_read "$target"
+
+  tmx send-keys -t "$target" -l -- "$2"
+  tmx send-keys -t "$target" Enter
   clear_read "$target"
 }
 
@@ -404,6 +418,7 @@ init_socket
 case "$1" in
   list)    shift; cmd_list "$@" ;;
   type)    shift; cmd_type "$@" ;;
+  exec)    shift; cmd_exec "$@" ;;
   message|msg) shift; cmd_message "$@" ;;
   read)    shift; cmd_read "$@" ;;
   keys)    shift; cmd_keys "$@" ;;
