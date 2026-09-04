@@ -3,7 +3,7 @@
 # Any tool that can run bash can use this to talk to other panes.
 set -euo pipefail
 
-VERSION="2.1.0"
+VERSION="2.2.0"
 
 # --- Helpers ---
 
@@ -118,7 +118,7 @@ Commands:
   list                      Show all panes (target, pid, command, size, label)
   type <target> <text>      Type text without pressing Enter
   exec <target> <command>   Type a command and press Enter
-  message <target> <text>   Type text with auto-prepended sender info and reply target
+  message <target> <text>   Send text with sender info and press Enter
   read <target> [lines]     Read last N lines from pane (default: 50)
   keys <target> <key>...    Send special keys (Enter, Escape, C-c, etc.)
   name <target> <label>     Label a pane (visible in tmux border)
@@ -262,6 +262,7 @@ cmd_message() {
 
   local header="[tmux-bridge from:${from} pane:${sender_pane} at:${session_win} — load the smux skill to reply]"
   tmx send-keys -t "$target" -l -- "${header} $2"
+  tmx send-keys -t "$target" Enter
   clear_read "$target"
 }
 

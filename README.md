@@ -76,6 +76,7 @@ A CLI for cross-pane communication. Any tool that can run bash can use it — Cl
 | `tmux-bridge read <target> [lines]` | Read last N lines from a pane |
 | `tmux-bridge type <target> <text>` | Type text into a pane (no Enter) |
 | `tmux-bridge exec <target> <command>` | Type a command and press Enter |
+| `tmux-bridge message <target> <text>` | Add sender metadata and submit a message |
 | `tmux-bridge keys <target> <key>...` | Send keys (Enter, Escape, C-c, etc.) |
 | `tmux-bridge name <target> <label>` | Label a pane for easy addressing |
 | `tmux-bridge resolve <label>` | Look up a pane by label |
