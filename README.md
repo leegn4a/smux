@@ -1,6 +1,6 @@
 # smux
 
-One-command tmux setup with terminal automation for AI agents.
+One-command tmux setup with terminal automation for AI agents on macOS, X11, and Wayland.
 
 - **For you** — keyboard-driven tmux config with Option-key bindings, mouse support, and pane labels
 - **For agents** — `tmux-bridge` CLI lets any agent read, type, and send keys to any pane
@@ -17,13 +17,14 @@ https://github.com/user-attachments/assets/9d5463ba-5972-4bbd-a07e-b585f1178011
 ## Install
 
 ```bash
-curl -fsSL https://shawnpana.com/smux/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/leegn4a/smux/main/install.sh | bash
 ```
 
 This installs:
 - **tmux** if not already installed (via Homebrew, apt, dnf, pacman, or apk)
 - **tmux.conf** with Option-key bindings, mouse support, pane labels, and a minimal status bar
 - **tmux-bridge** CLI for cross-pane agent communication
+- **Wayland clipboard support** via `wl-clipboard` when installed from a Wayland session (with macOS and X11 fallbacks)
 
 Everything lives in `~/.smux/`.
 
@@ -62,7 +63,7 @@ All keybindings use **Option (Alt)** with no prefix required.
 ### Mouse
 
 - Click to select panes
-- Drag to select text (auto-copies to clipboard)
+- Drag to select text (auto-copies to the native Wayland, macOS, or X11 clipboard)
 - Scroll wheel to scroll
 
 ## tmux-bridge
@@ -105,8 +106,19 @@ Works with Claude Code, Codex, Cursor, Copilot, and [40+ other agents](https://s
 
 ## Requirements
 
-- macOS (requires [Homebrew](https://brew.sh)) or Linux
+- macOS (requires [Homebrew](https://brew.sh)) or Linux (X11 and Wayland)
 - tmux 3.2+ (installed automatically)
+
+On Linux, install or update smux from the graphical session you use with tmux.
+Wayland sessions receive `wl-clipboard`; X11 sessions receive `xclip`. The tmux
+config also keeps the Wayland socket environment available when reattaching to a
+long-lived tmux server.
+
+## Upstream sync
+
+This fork merges `ShawnPana/smux:main` into `main` daily. You can also run
+**Sync upstream** from the Actions tab. It never force-pushes; merge conflicts
+leave the fork unchanged for manual resolution.
 
 ## Sponsor
 

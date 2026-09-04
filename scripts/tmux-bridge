@@ -332,14 +332,18 @@ cmd_doctor() {
   # Detected socket
   echo "---"
   local detected
-  detected=$(detect_socket 2>/dev/null || echo "__failed__")
+  if ! detected=$(detect_socket 2>/dev/null); then
+    detected="__failed__"
+  fi
   if [[ "$detected" == "__failed__" ]]; then
     echo "Detected socket:    FAILED — no reachable tmux server found"
     ok=false
   elif [[ "$detected" == "__default__" ]]; then
     echo "Detected socket:    (default tmux server)"
+    TMUX_SOCKET="$detected"
   else
     echo "Detected socket:    $detected"
+    TMUX_SOCKET="$detected"
   fi
 
   # Pane visibility
@@ -359,7 +363,7 @@ cmd_doctor() {
     count=$(tmx list-panes -a -F '#{pane_id}' 2>/dev/null | wc -l | tr -d ' ')
     echo "Total panes:        $count"
     local labeled
-    labeled=$(tmx list-panes -a -F '#{@name}' 2>/dev/null | grep -cv '^$' || echo 0)
+    labeled=$(tmx list-panes -a -F '#{@name}' 2>/dev/null | grep -c . || true)
     echo "Labeled panes:      $labeled"
   fi
 
@@ -369,8 +373,13 @@ cmd_doctor() {
   else
     echo "Status: ISSUES DETECTED"
     echo ""
-    echo "Likely cause: \$TMUX env var is stale (terminal was restarted)."
-    echo "Fix: re-source tmux env or set TMUX_BRIDGE_SOCKET explicitly."
+    if [[ -z "${TMUX:-}" && -z "${TMUX_BRIDGE_SOCKET:-}" ]]; then
+      echo "Likely cause: no reachable tmux server is running."
+      echo "Fix: start or attach to tmux, then run tmux-bridge from that environment."
+    else
+      echo "Likely cause: \$TMUX env var is stale (terminal was restarted)."
+      echo "Fix: re-source tmux env or set TMUX_BRIDGE_SOCKET explicitly."
+    fi
     return 1
   fi
 }
@@ -379,9 +388,11 @@ cmd_doctor() {
 
 [[ $# -eq 0 ]] && usage
 
-# cmd_id and cmd_doctor(detect) don't need socket pre-init for the id case
+# cmd_id and cmd_doctor perform their own environment checks. In particular,
+# doctor must remain useful when socket detection fails.
 case "$1" in
   id)      shift; cmd_id "$@"; exit ;;
+  doctor)  shift; cmd_doctor "$@"; exit ;;
   -h|--help|help) usage ;;
   version) echo "tmux-bridge $VERSION"; exit ;;
 esac
@@ -398,6 +409,5 @@ case "$1" in
   keys)    shift; cmd_keys "$@" ;;
   name)    shift; cmd_name "$@" ;;
   resolve) shift; cmd_resolve "$@" ;;
-  doctor)  shift; cmd_doctor "$@" ;;
   *)       die "unknown command: $1. Run 'tmux-bridge' for usage." ;;
 esac

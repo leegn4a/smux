@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+# Copy tmux selections to the desktop clipboard.
+#
+# This is intentionally selected at copy time rather than when tmux starts:
+# tmux servers can outlive a terminal client, and a client may attach from a
+# different graphical session.
+set -eu
+
+has_command() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+# wl-copy speaks to the native Wayland clipboard. Prefer it whenever a
+# Wayland socket is available; X11 tools can otherwise select an Xwayland
+# clipboard instead of the compositor's clipboard.
+if [ -n "${WAYLAND_DISPLAY:-}" ] && has_command wl-copy; then
+  exec wl-copy
+fi
+
+if has_command pbcopy; then
+  exec pbcopy
+fi
+
+if [ -n "${DISPLAY:-}" ] && has_command xclip; then
+  exec xclip -selection clipboard
+fi
+
+if [ -n "${DISPLAY:-}" ] && has_command xsel; then
+  exec xsel --clipboard --input
+fi
+
+# copy-pipe still leaves the selection in tmux's paste buffer. Avoid making a
+# missing optional desktop integration turn a successful tmux copy into an
+# error.
+exit 0
