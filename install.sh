@@ -116,43 +116,6 @@ backup_existing() {
   fi
 }
 
-ensure_path() {
-  local rc_file=""
-  case "${SHELL:-/bin/bash}" in
-    */zsh)
-      if [[ -n "${ZDOTDIR:-}" ]]; then
-        rc_file="$ZDOTDIR/.zshrc"
-      elif [[ -f "$HOME/.config/zsh/.zshrc" ]]; then
-        # Common Arch/Linux convention when ZDOTDIR was not exported to bash.
-        rc_file="$HOME/.config/zsh/.zshrc"
-      else
-        rc_file="$HOME/.zshrc"
-      fi
-      ;;
-    */bash) rc_file="$HOME/.bashrc" ;;
-    *)      rc_file="$HOME/.profile" ;;
-  esac
-
-  local path_marker='# smux: tmux-only PATH'
-
-  if [[ -f "$rc_file" ]] && grep -qF "$path_marker" "$rc_file"; then
-    return
-  fi
-
-  info "Adding ~/.smux/bin to PATH inside tmux panes in $rc_file"
-  mkdir -p "$(dirname "$rc_file")"
-  {
-    printf '\n%s\n' "$path_marker"
-    printf '%s\n' 'if [ -n "${TMUX:-}" ]; then'
-    printf '%s\n' '  case ":$PATH:" in'
-    printf '%s\n' '    *":$HOME/.smux/bin:"*) ;;'
-    printf '%s\n' '    *) export PATH="$HOME/.smux/bin:$PATH" ;;'
-    printf '%s\n' '  esac'
-    printf '%s\n' 'fi'
-  } >> "$rc_file"
-  info "Restart your shell or run: source $rc_file"
-}
-
 download() {
   local url="$1" dest="$2" temp
   temp=$(mktemp "${dest}.tmp.XXXXXX")
@@ -227,15 +190,12 @@ cmd_install() {
   install_runtime_files
   link_tmux_config
 
-  # 6. Ensure PATH
-  ensure_path
-
-  # 7. Reload tmux if running
+  # 6. Reload tmux if running
   if tmux list-sessions &>/dev/null; then
     tmux source-file "$SMUX_DIR/tmux.conf" 2>/dev/null && info "Reloaded tmux config." || true
   fi
 
-  # 8. Done
+  # 7. Done
   echo ""
   printf "${GREEN}${BOLD}smux installed!${NC}\n"
   echo ""
@@ -243,7 +203,7 @@ cmd_install() {
   echo "  tmux-bridge:  ~/.smux/bin/tmux-bridge"
   echo "  smux CLI:     ~/.smux/bin/smux"
   echo ""
-  echo "  Run 'smux help' for commands."
+  echo "  Run 'smux help' for commands inside tmux."
 }
 
 cmd_update() {
